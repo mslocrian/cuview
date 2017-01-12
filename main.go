@@ -12,14 +12,14 @@ import (
 )
 
 var (
-	routeCommand = "/usr/bin/vtysh"
+	routeCommand     = "/usr/bin/vtysh"
 	routeCommandArgs = []string{"-c", "show ip route json"}
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	var (
 		cmdOut []byte
-		err error
+		err    error
 	)
 	if cmdOut, err = exec.Command(routeCommand, routeCommandArgs...).Output(); err != nil {
 		fmt.Fprintf(w, "There was an error running %s: %s", routeCommand, err)
@@ -32,9 +32,9 @@ func main() {
 	flag.Parse()
 	log.Infoln("Starting cuview", version.Info())
 	log.Infoln("Build Context", version.BuildContext())
-        http.HandleFunc("/test", handler)
+	http.HandleFunc("/test", handler)
 
-        listenAddress := "127.0.0.1:9000"
+	listenAddress := "127.0.0.1:9000"
 	log.Infof("Listening on %s", listenAddress)
-        log.Fatal(http.ListenAndServe(listenAddress, nil))
+	log.Fatal(http.ListenAndServe(listenAddress, nil))
 }
