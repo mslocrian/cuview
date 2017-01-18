@@ -10,6 +10,5 @@ build:
         -X {{repoPath}}/vendor/github.com/prometheus/common/version.BuildDate={{date "20060102-15:04:05"}}
 tarball:
     files:
-        - cuview.yml
         - LICENSE
         - NOTICE
