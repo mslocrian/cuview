@@ -31,10 +31,6 @@ type ApiRoute struct {
 // type ApiRoutes []ApiRoute
 
 type ApiMgr struct {
-	//logger		*logging.Writer
-	//clientMgr	*clients.ClientMgr
-	//objectMgr	*objects.ObjectMgr
-	//actionMgr	*actions.ActionMgr
 	apiVer        string
 	apiBase       string
 	apiBaseState  string
@@ -46,7 +42,6 @@ type ApiMgr struct {
 var gApiMgr *ApiMgr
 
 func InitializeApiMgr() *ApiMgr {
-	//var err error
 	mgr := new(ApiMgr)
 	mgr.apiVer = "v1"
 	mgr.apiBase = "/api/" + mgr.apiVer + "/"
