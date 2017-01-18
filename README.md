@@ -1,1 +1,1 @@
-This is a web frontend to expose Cumulus Command JSON output in a web interface
+Cuview (Pronounced: Queue View) is a web frontend to expose Cumulus Linux command output in JSON format via a web interface
