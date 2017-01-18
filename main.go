@@ -20,7 +20,7 @@ import (
 	_ "net/http/pprof"
 	"strconv"
 
-	"apis"
+	"github.com/mslocrian/cuview/apis"
 
 	"github.com/prometheus/common/log"
 	"github.com/prometheus/common/version"
