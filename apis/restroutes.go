@@ -22,6 +22,10 @@ import (
 	defs "github.com/mslocrian/cuview/definitions"
 )
 
+var (
+	BaseDirectory  *string
+)
+
 type ApiRoute struct {
 	Name        string
 	Method      string
@@ -57,8 +61,6 @@ func InitializeApiMgr() *ApiMgr {
 func (mgr *ApiMgr) InitializeRestRoutes(defs defs.SwaggerDef) bool {
 	var rt ApiRoute
 
-	// Need to get a better way of defining these routes.
-
 	for _, route := range defs.GetRoutes() {
 		for _, method := range defs.GetRequestMethods(route) {
 			rt = ApiRoute{strings.Replace(route, "/", method+"_", -1),
@@ -79,11 +81,12 @@ func (mgr *ApiMgr) InitializeRestRoutes(defs defs.SwaggerDef) bool {
 
 func (mgr *ApiMgr) InstantiateRestRtr() *mux.Router {
 	mgr.pRestRtr = mux.NewRouter().StrictSlash(true)
-	mgr.pRestRtr.PathPrefix("/v2/api-spec/").Handler(http.StripPrefix("/v2/api-spec/", http.FileServer(http.Dir("/home/stegen/git/cuview/definitions"))))
-	mgr.pRestRtr.PathPrefix("/api-docs/").Handler(http.StripPrefix("/api-docs/", http.FileServer(http.Dir("/home/stegen/git/cuview/api-docs"))))
+	mgr.pRestRtr.PathPrefix("/v2/api-spec/").Handler(http.StripPrefix("/v2/api-spec/", http.FileServer(http.Dir(*BaseDirectory + "/definitions"))))
+	mgr.pRestRtr.PathPrefix("/api-docs/").Handler(http.StripPrefix("/api-docs/", http.FileServer(http.Dir(*BaseDirectory + "/api-docs"))))
 
 	for _, route := range mgr.restRoutes {
-		ch := GetCumulusHTTPHandler(route.HandlerFunc, &route)
+		//ch := GetCumulusHTTPHandler(route.HandlerFunc, &route)
+		ch := GetCumulusHTTPHandler(route.HandlerFunc, route)
 		mgr.pRestRtr.Methods(route.Method).Path(route.Pattern).Handler(ch)
 	}
 	return mgr.pRestRtr

@@ -58,7 +58,9 @@ func runNetdCommand(cCmd string, c string) ([]byte, error) {
 		cmdOut bytes.Buffer
 	)
 	cmd := strings.Split(c, " ")
+	cmd = append([]string{"/usr/bin/net"}, cmd...)
 	cmd = append(cmd, "json")
+
 	command, err := json.Marshal(cmd)
 	if err != nil {
 		return cmdOut.Bytes(), err
@@ -87,6 +89,7 @@ func runVtyshCommand(cCmd string, cmd string) ([]byte, error) {
 		runCmd    *exec.Cmd
 		waitGroup sync.WaitGroup
 	)
+	cmd = "-c " + cmd + " json"
 	runCmd = exec.Command(cCmd, cmd)
 	stdout, _ := runCmd.StdoutPipe()
 

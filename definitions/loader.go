@@ -2,7 +2,6 @@ package definitions
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -10,7 +9,7 @@ import (
 )
 
 var (
-	definitionFile = flag.String("definition.file", "./swagger.json", "Path to swagger.json directory.")
+	BaseDirectory *string
 )
 
 type Envelope struct {
@@ -185,7 +184,7 @@ func NewParameter() *Parameter {
 
 func LoadAPIDefs() SwaggerDef {
 	var swagDef SwaggerDef
-	jsonData, err := ioutil.ReadFile(*definitionFile)
+	jsonData, err := ioutil.ReadFile(*BaseDirectory + "/definitions/swagger.json")
 	if err != nil {
 		fmt.Printf("Could not open definition file: %s\n", err.Error())
 		os.Exit(1)

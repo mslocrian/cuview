@@ -37,7 +37,8 @@ var (
 
 type CumulusHTTPHandler struct {
 	handler   http.Handler
-	routeData *ApiRoute
+	//routeData *ApiRoute
+	routeData ApiRoute
 }
 
 func (ch *CumulusHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -59,13 +60,14 @@ func (ch *CumulusHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 	clen, _ := strconv.Atoi(r.Header.Get("Content-Length"))
 
-	fmt.Printf("ch.routeData.Method=%s\n", ch.routeData.Method)
 	switch ch.routeData.Method {
 	case "GET":
 		var err error
 		output, err = runCommand(ch.routeData.Parameters, ch.routeData.Options, ch.routeData.Commands)
 		if err != nil {
-			fmt.Printf("could not run command!\n")
+			w.WriteHeader(500)
+			fmt.Fprintf(w, "could not run command!\n")
+			return
 		}
 		w.WriteHeader(200)
 	default:
@@ -74,10 +76,12 @@ func (ch *CumulusHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 	clen += len(data_before) + len(data_after) + len(s) + len(output)
 
+	/*
 	w.Write(data_before)
 	w.Write(rec.Body.Bytes())
 	w.Write(data_after)
 	w.Write([]byte(s))
+	*/
 	w.Write(output)
 	return
 }
@@ -188,6 +192,7 @@ func CumulusHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func GetCumulusHTTPHandler(handler http.Handler, route *ApiRoute) *CumulusHTTPHandler {
+//func GetCumulusHTTPHandler(handler http.Handler, route *ApiRoute) *CumulusHTTPHandler {
+func GetCumulusHTTPHandler(handler http.Handler, route ApiRoute) *CumulusHTTPHandler {
 	return &CumulusHTTPHandler{handler: handler, routeData: route}
 }

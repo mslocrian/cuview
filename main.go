@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"github.com/mslocrian/cuview/definitions"
-
 	"github.com/mslocrian/cuview/apis"
 
 	"github.com/prometheus/common/log"
@@ -33,6 +32,7 @@ import (
 var (
 	listenAddress = flag.String("listen.address", "127.0.0.1", "IP Address to bind webserver to.")
 	listenPort    = flag.Int("listen.port", 9000, "Port to bind webserver to.")
+	baseDirectory = flag.String("base.dir", "/usr/local/cuview", "Path to installation base")
 )
 
 func LogWebRequest(handler http.Handler) http.Handler {
@@ -49,6 +49,8 @@ func main() {
 	flag.Parse()
 	log.Infoln("Starting cuview", version.Info())
 	log.Infoln("Build Context", version.BuildContext())
+	apis.BaseDirectory = baseDirectory
+	definitions.BaseDirectory = baseDirectory
 
 	mgr := apis.InitializeApiMgr()
 	mgr.InitializeRestRoutes(definitions.LoadAPIDefs())
