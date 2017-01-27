@@ -14,7 +14,8 @@
         "application/json"
     ],
     "x-cumulus-commands": {
-    	"netd": "/var/run/nclu/uds",
+    	"netdSocket": "/var/run/nclu/uds",
+    	"netdCommand": "/usr/bin/net",
     	"vtysh": "/usr/bin/vtysh"
     },
     "paths": {

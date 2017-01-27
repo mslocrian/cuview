@@ -30,13 +30,11 @@ type ApiRoute struct {
 	Name        string
 	Method      string
 	Pattern     string
-	Parameters  []*defs.Parameter
+	Parameters  map[string]*defs.Parameter
 	Options     *defs.CumulusOption
 	Commands    defs.CumulusCommands
 	HandlerFunc http.HandlerFunc
 }
-
-// type ApiRoutes []ApiRoute
 
 type ApiMgr struct {
 	apiVer        string
@@ -85,7 +83,6 @@ func (mgr *ApiMgr) InstantiateRestRtr() *mux.Router {
 	mgr.pRestRtr.PathPrefix("/api-docs/").Handler(http.StripPrefix("/api-docs/", http.FileServer(http.Dir(*BaseDirectory + "/api-docs"))))
 
 	for _, route := range mgr.restRoutes {
-		//ch := GetCumulusHTTPHandler(route.HandlerFunc, &route)
 		ch := GetCumulusHTTPHandler(route.HandlerFunc, route)
 		mgr.pRestRtr.Methods(route.Method).Path(route.Pattern).Handler(ch)
 	}

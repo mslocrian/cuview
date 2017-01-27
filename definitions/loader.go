@@ -26,7 +26,8 @@ type SwaggerDef struct {
 }
 
 type CumulusCommands struct {
-	Netd  string `json:"netd"`
+	NetdSocket  string `json:"netdSocket"`
+	NetdCommand  string `json:"netdCommand"`
 	Vtysh string `json:"vtysh"`
 }
 
@@ -49,7 +50,8 @@ type RequestMethod struct {
 	Summary        string
 	Description    string
 	CumulusOptions *CumulusOption
-	Parameters     []*Parameter
+	//Parameters     []*Parameter
+	Parameters     map[string]*Parameter
 }
 
 type Parameter struct {
@@ -94,10 +96,21 @@ func (s *Endpoint) AddRequestMethod(m string) error {
 	return err
 }
 
+func (s *RequestMethod) InitParameters() error {
+	var err error
+	s.Parameters = make(map[string]*Parameter)
+	return err
+}
+
 func (s *RequestMethod) AddParameters(opts interface{}) error {
 	var err error
-	p := NewParameter()
+
+	if s.Parameters == nil {
+		s.InitParameters()
+	}
+
 	for _, entry := range opts.([]interface{}) {
+		p := NewParameter()
 		for k, v := range entry.(map[string]interface{}) {
 			switch k {
 			case "name":
@@ -114,7 +127,8 @@ func (s *RequestMethod) AddParameters(opts interface{}) error {
 				continue
 			}
 		}
-		s.Parameters = append(s.Parameters, p)
+		//s.Parameters = append(s.Parameters, p)
+		s.Parameters[p.Name] = p
 	}
 	return err
 }
@@ -170,7 +184,7 @@ func (s *SwaggerDef) GetRequestMethods(route string) []string {
 	return methods
 }
 
-func (s *SwaggerDef) GetURLParameters(route string, method string) []*Parameter {
+func (s *SwaggerDef) GetURLParameters(route string, method string) map[string]*Parameter {
 	return s.Paths[route].RequestMethods[method].Parameters
 }
 

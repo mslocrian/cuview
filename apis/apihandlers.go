@@ -37,13 +37,14 @@ var (
 
 type CumulusHTTPHandler struct {
 	handler   http.Handler
-	//routeData *ApiRoute
 	routeData ApiRoute
 }
 
 func (ch *CumulusHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var s string
 	var output []byte
+	//var validParams map[string]interface{}
+	var validParams map[string][]string
 
 	rec := httptest.NewRecorder()
 	ch.handler.ServeHTTP(rec, r)
@@ -59,6 +60,14 @@ func (ch *CumulusHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	clen, _ := strconv.Atoi(r.Header.Get("Content-Length"))
+
+	queryParams := r.URL.Query()
+	validParams = make(map[string][]string)
+	for k, v := range queryParams {
+		if _, ok := ch.routeData.Parameters[k]; ok {
+			validParams[k] = v
+		}
+	}
 
 	switch ch.routeData.Method {
 	case "GET":
@@ -82,17 +91,27 @@ func (ch *CumulusHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	w.Write(data_after)
 	w.Write([]byte(s))
 	*/
-	w.Write(output)
+
+	// holding off for now.. some bug
+	//output = minifyOutput(validParams, output)
+
+	delete(validParams, "minify")
+	if len(validParams) != 0 {
+		output = handleParams(validParams, output)
+		w.Write(output)
+	} else {
+		w.Write(output)
+	}
 	return
 }
 
-func runCommand(params []*defs.Parameter, co *defs.CumulusOption, cc defs.CumulusCommands) ([]byte, error) {
+func runCommand(params map[string]*defs.Parameter, co *defs.CumulusOption, cc defs.CumulusCommands) ([]byte, error) {
 	var (
 		cmdOut []byte
 		err    error
 	)
 	if co.Netd == true {
-		cmdOut, err = runNetdCommand(cc.Netd, co.Command)
+		cmdOut, err = runNetdCommand(cc.NetdSocket, cc.NetdCommand, co.Command)
 	} else {
 		cmdOut, err = runVtyshCommand(cc.Vtysh, co.Command)
 	}
@@ -116,7 +135,7 @@ func GetCumulusIPv4Routes(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(cmdOut))
 		} else {
 			w.WriteHeader(http.StatusOK)
-			minifyOutput(w, cmdOut)
+			minifyOutputOrig(w, cmdOut)
 		}
 	}
 	return
@@ -139,7 +158,7 @@ func GetCumulusInterfaces(w http.ResponseWriter, r *http.Request) {
 
 	if doMinifyOutput(r) {
 		w.WriteHeader(http.StatusOK)
-		minifyOutput(w, cmdOut)
+		minifyOutputOrig(w, cmdOut)
 	} else {
 		w.WriteHeader(http.StatusOK)
 		w.Write(cmdOut)
@@ -164,7 +183,7 @@ func GetCumulusBGPv4Neighbors(w http.ResponseWriter, r *http.Request) {
 
 	if doMinifyOutput(r) {
 		w.WriteHeader(http.StatusOK)
-		minifyOutput(w, cmdOut)
+		minifyOutputOrig(w, cmdOut)
 	} else {
 		w.WriteHeader(http.StatusOK)
 		w.Write(cmdOut)
@@ -192,7 +211,6 @@ func CumulusHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-//func GetCumulusHTTPHandler(handler http.Handler, route *ApiRoute) *CumulusHTTPHandler {
 func GetCumulusHTTPHandler(handler http.Handler, route ApiRoute) *CumulusHTTPHandler {
 	return &CumulusHTTPHandler{handler: handler, routeData: route}
 }
