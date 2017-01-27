@@ -16,15 +16,19 @@ package apis
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
-	//"github.com/prometheus/common/log"
+	defs "github.com/mslocrian/cuview/definitions"
 )
 
 type ApiRoute struct {
 	Name        string
 	Method      string
 	Pattern     string
+	Parameters  []*defs.Parameter
+	Options     *defs.CumulusOption
+	Commands    defs.CumulusCommands
 	HandlerFunc http.HandlerFunc
 }
 
@@ -50,48 +54,23 @@ func InitializeApiMgr() *ApiMgr {
 	return mgr
 }
 
-func (mgr *ApiMgr) InitializeRestRoutes() bool {
+func (mgr *ApiMgr) InitializeRestRoutes(defs defs.SwaggerDef) bool {
 	var rt ApiRoute
 
 	// Need to get a better way of defining these routes.
 
-	/* /public/v1/state/bgpv4neighbors */
-	rt = ApiRoute{"bgpv4neighbors",
-		"GET",
-		mgr.apiBaseState + "bgpv4neighbors",
-		GetCumulusBGPv4Neighbors,
-	}
-	mgr.restRoutes = append(mgr.restRoutes, rt)
-
-	/* /public/v1/state/ipv4routes/{id} */
-	rt = ApiRoute{"getroutesbyid",
-		"GET",
-		mgr.apiBaseState + "ipv4routes" + "/" + "{objId}",
-		GetCumulusIPv4RoutesById,
-	}
-	mgr.restRoutes = append(mgr.restRoutes, rt)
-
-	/* /public/v1/state/ipv4routes */
-	rt = ApiRoute{"getroutes",
-		"GET",
-		mgr.apiBaseState + "ipv4routes",
-		GetCumulusIPv4Routes,
-	}
-	mgr.restRoutes = append(mgr.restRoutes, rt)
-
-	/* /public/v1/state/interfaces/{id} */
-	rt = ApiRoute{"getinterfacesbyid",
-		"GET",
-		mgr.apiBaseState + "interfaces" + "/" + "{objId}",
-		GetCumulusInterfacesById,
-	}
-	mgr.restRoutes = append(mgr.restRoutes, rt)
-
-	/* /public/v1/state/interfaces */
-	rt = ApiRoute{"getinterfaces",
-		"GET",
-		mgr.apiBaseState + "interfaces",
-		GetCumulusInterfaces,
+	for _, route := range defs.GetRoutes() {
+		for _, method := range defs.GetRequestMethods(route) {
+			rt = ApiRoute{strings.Replace(route, "/", method+"_", -1),
+				strings.ToUpper(method),
+				mgr.apiBaseState + strings.Replace(route, "/", "", -1),
+				defs.GetURLParameters(route, method),
+				defs.GetCumulusOptions(route, method),
+				defs.CumulusCommands,
+				CumulusHandler,
+			}
+			mgr.restRoutes = append(mgr.restRoutes, rt)
+		}
 	}
 	mgr.restRoutes = append(mgr.restRoutes, rt)
 
@@ -100,9 +79,12 @@ func (mgr *ApiMgr) InitializeRestRoutes() bool {
 
 func (mgr *ApiMgr) InstantiateRestRtr() *mux.Router {
 	mgr.pRestRtr = mux.NewRouter().StrictSlash(true)
+	mgr.pRestRtr.PathPrefix("/v2/api-spec/").Handler(http.StripPrefix("/v2/api-spec/", http.FileServer(http.Dir("/home/stegen/git/cuview/definitions"))))
+	mgr.pRestRtr.PathPrefix("/api-docs/").Handler(http.StripPrefix("/api-docs/", http.FileServer(http.Dir("/home/stegen/git/cuview/api-docs"))))
+
 	for _, route := range mgr.restRoutes {
-		//var handler http.Handler
-		mgr.pRestRtr.Methods(route.Method).Path(route.Pattern).Handler(route.HandlerFunc)
+		ch := GetCumulusHTTPHandler(route.HandlerFunc, &route)
+		mgr.pRestRtr.Methods(route.Method).Path(route.Pattern).Handler(ch)
 	}
 	return mgr.pRestRtr
 }

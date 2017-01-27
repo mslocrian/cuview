@@ -17,6 +17,10 @@ package apis
 import (
 	"fmt"
 	"net/http"
+	"net/http/httptest"
+	"strconv"
+
+	defs "github.com/mslocrian/cuview/definitions"
 )
 
 var (
@@ -30,6 +34,66 @@ var (
 	netBGPv4NeighborCommandArgs = []string{netCommand, "show", "bgp", "ipv4", "unicast", "summary"}
 	netLldpArgs                 = []string{netCommand, "show", "lldp"}
 )
+
+type CumulusHTTPHandler struct {
+	handler   http.Handler
+	routeData *ApiRoute
+}
+
+func (ch *CumulusHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var s string
+	var output []byte
+
+	rec := httptest.NewRecorder()
+	ch.handler.ServeHTTP(rec, r)
+	data_before := []byte("text shoved in before\n")
+	data_after := []byte("text shoved in after\n")
+
+	// Set headers
+	for k, v := range rec.Header() {
+		w.Header()[k] = v
+	}
+	w.Header().Set("X-Cumulus-API", "True")
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	clen, _ := strconv.Atoi(r.Header.Get("Content-Length"))
+
+	fmt.Printf("ch.routeData.Method=%s\n", ch.routeData.Method)
+	switch ch.routeData.Method {
+	case "GET":
+		var err error
+		output, err = runCommand(ch.routeData.Parameters, ch.routeData.Options, ch.routeData.Commands)
+		if err != nil {
+			fmt.Printf("could not run command!\n")
+		}
+		w.WriteHeader(200)
+	default:
+		w.WriteHeader(405)
+	}
+
+	clen += len(data_before) + len(data_after) + len(s) + len(output)
+
+	w.Write(data_before)
+	w.Write(rec.Body.Bytes())
+	w.Write(data_after)
+	w.Write([]byte(s))
+	w.Write(output)
+	return
+}
+
+func runCommand(params []*defs.Parameter, co *defs.CumulusOption, cc defs.CumulusCommands) ([]byte, error) {
+	var (
+		cmdOut []byte
+		err    error
+	)
+	if co.Netd == true {
+		cmdOut, err = runNetdCommand(cc.Netd, co.Command)
+	} else {
+		cmdOut, err = runVtyshCommand(cc.Vtysh, co.Command)
+	}
+	return cmdOut, err
+}
 
 func GetCumulusIPv4Routes(w http.ResponseWriter, r *http.Request) {
 	var (
@@ -118,4 +182,12 @@ func GetCumulusInterfacesById(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(output))
 	return
+}
+
+func CumulusHandler(w http.ResponseWriter, r *http.Request) {
+	return
+}
+
+func GetCumulusHTTPHandler(handler http.Handler, route *ApiRoute) *CumulusHTTPHandler {
+	return &CumulusHTTPHandler{handler: handler, routeData: route}
 }

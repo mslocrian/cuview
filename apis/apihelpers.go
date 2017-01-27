@@ -52,6 +52,55 @@ func minifyOutput(w http.ResponseWriter, s []byte) {
 	return
 }
 
+func runNetdCommand(cCmd string, c string) ([]byte, error) {
+	var (
+		err    error
+		cmdOut bytes.Buffer
+	)
+	cmd := strings.Split(c, " ")
+	cmd = append(cmd, "json")
+	command, err := json.Marshal(cmd)
+	if err != nil {
+		return cmdOut.Bytes(), err
+	}
+
+	conn, err := net.Dial("unix", cCmd)
+	if err != nil {
+		return cmdOut.Bytes(), err
+	}
+	defer conn.Close()
+
+	_, err = conn.Write(command)
+	if err != nil {
+		return cmdOut.Bytes(), err
+	}
+
+	io.Copy(&cmdOut, conn)
+
+	return cmdOut.Bytes(), err
+}
+
+func runVtyshCommand(cCmd string, cmd string) ([]byte, error) {
+	var (
+		err       error
+		cmdOut    bytes.Buffer
+		runCmd    *exec.Cmd
+		waitGroup sync.WaitGroup
+	)
+	runCmd = exec.Command(cCmd, cmd)
+	stdout, _ := runCmd.StdoutPipe()
+
+	waitGroup.Add(1)
+	go func() {
+		defer waitGroup.Done()
+		io.Copy(&cmdOut, stdout)
+	}()
+	err = runCmd.Run()
+	waitGroup.Wait()
+
+	return cmdOut.Bytes(), err
+}
+
 func runCumulusNetdCommand(cmd []string) ([]byte, error) {
 	var (
 		err    error

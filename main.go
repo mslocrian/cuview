@@ -16,9 +16,13 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"net/http"
 	_ "net/http/pprof"
 	"strconv"
+	"time"
+
+	"github.com/mslocrian/cuview/definitions"
 
 	"github.com/mslocrian/cuview/apis"
 
@@ -31,17 +35,27 @@ var (
 	listenPort    = flag.Int("listen.port", 9000, "Port to bind webserver to.")
 )
 
+func LogWebRequest(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var ts string
+		t := time.Now()
+		ts = fmt.Sprintf("%s", t.Format("Mon Jan _2 15:04:05 2006"))
+		log.Infof("%s [%s] %s %s (%s)", r.RemoteAddr, ts, r.Method, r.URL, r.Proto)
+		handler.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	flag.Parse()
 	log.Infoln("Starting cuview", version.Info())
 	log.Infoln("Build Context", version.BuildContext())
 
 	mgr := apis.InitializeApiMgr()
-	mgr.InitializeRestRoutes()
+	mgr.InitializeRestRoutes(definitions.LoadAPIDefs())
 	mgr.InstantiateRestRtr()
 	restRtr := mgr.GetRestRtr()
 
 	bindTuple := *listenAddress + ":" + strconv.Itoa(*listenPort)
 	log.Infof("Listening on %s", bindTuple)
-	log.Fatal(http.ListenAndServe(bindTuple, restRtr))
+	log.Fatal(http.ListenAndServe(bindTuple, LogWebRequest(restRtr)))
 }
