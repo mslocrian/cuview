@@ -22,8 +22,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/mslocrian/cuview/definitions"
 	"github.com/mslocrian/cuview/apis"
+	"github.com/mslocrian/cuview/definitions"
 
 	"github.com/prometheus/common/log"
 	"github.com/prometheus/common/version"

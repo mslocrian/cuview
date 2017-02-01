@@ -86,10 +86,10 @@ func (ch *CumulusHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	clen += len(data_before) + len(data_after) + len(s) + len(output)
 
 	/*
-	w.Write(data_before)
-	w.Write(rec.Body.Bytes())
-	w.Write(data_after)
-	w.Write([]byte(s))
+		w.Write(data_before)
+		w.Write(rec.Body.Bytes())
+		w.Write(data_after)
+		w.Write([]byte(s))
 	*/
 
 	// holding off for now.. some bug

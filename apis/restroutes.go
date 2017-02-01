@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	BaseDirectory  *string
+	BaseDirectory *string
 )
 
 type ApiRoute struct {
@@ -79,8 +79,8 @@ func (mgr *ApiMgr) InitializeRestRoutes(defs defs.SwaggerDef) bool {
 
 func (mgr *ApiMgr) InstantiateRestRtr() *mux.Router {
 	mgr.pRestRtr = mux.NewRouter().StrictSlash(true)
-	mgr.pRestRtr.PathPrefix("/v2/api-spec/").Handler(http.StripPrefix("/v2/api-spec/", http.FileServer(http.Dir(*BaseDirectory + "/definitions"))))
-	mgr.pRestRtr.PathPrefix("/api-docs/").Handler(http.StripPrefix("/api-docs/", http.FileServer(http.Dir(*BaseDirectory + "/api-docs"))))
+	mgr.pRestRtr.PathPrefix("/v2/api-spec/").Handler(http.StripPrefix("/v2/api-spec/", http.FileServer(http.Dir(*BaseDirectory+"/definitions"))))
+	mgr.pRestRtr.PathPrefix("/api-docs/").Handler(http.StripPrefix("/api-docs/", http.FileServer(http.Dir(*BaseDirectory+"/api-docs"))))
 
 	for _, route := range mgr.restRoutes {
 		ch := GetCumulusHTTPHandler(route.HandlerFunc, route)

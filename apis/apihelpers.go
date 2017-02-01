@@ -57,7 +57,7 @@ func minifyOutputOrig(w http.ResponseWriter, s []byte) {
 
 func Minify(s []byte) []byte {
 	var (
-		err error	
+		err    error
 		output bytes.Buffer
 	)
 	m := minify.New()

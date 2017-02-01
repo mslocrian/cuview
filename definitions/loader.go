@@ -27,14 +27,14 @@ type SwaggerDef struct {
 
 type CumulusCommands struct {
 	NetdSocket  string `json:"netdSocket"`
-	NetdCommand  string `json:"netdCommand"`
-	Vtysh string `json:"vtysh"`
+	NetdCommand string `json:"netdCommand"`
+	Vtysh       string `json:"vtysh"`
 }
 
 type CumulusOption struct {
-	Netd		 bool
-	Command		 string
-	ParamHandler	string
+	Netd         bool
+	Command      string
+	ParamHandler string
 }
 
 type Info struct {
