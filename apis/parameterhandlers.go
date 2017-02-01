@@ -23,12 +23,12 @@ import (
 type ParameterHandler struct {
 }
 
-func (h *ParameterHandler) GetInterfaceParams(p map[string][]string, s []byte) []byte {
+func (h *ParameterHandler) GetInterfacesParams(p map[string][]string, s []byte) []byte {
 	// some work shoud go here
 	return s
 }
 
-func (h *ParameterHandler) GetBgpv4NeighborParams(p map[string][]string, s []byte) []byte {
+func (h *ParameterHandler) GetBgpv4NeighborsParams(p map[string][]string, s []byte) []byte {
 	// some work should go here
 	return s
 }

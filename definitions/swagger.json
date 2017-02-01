@@ -60,7 +60,7 @@
             	"x-cumulus-options": {
             		"netd": true,
             		"command": "show interface",
-                        "parameter_handler": "GetInterfaceParams"
+                        "parameter_handler": "GetInterfacesParams"
             	}
             }
         },
