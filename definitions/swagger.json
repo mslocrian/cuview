@@ -60,7 +60,7 @@
             	"x-cumulus-options": {
             		"netd": true,
             		"command": "show interface",
-                        "parameter_handler": "getInterfaceParams"
+                        "parameter_handler": "GetInterfaceParams"
             	}
             }
         },
@@ -105,7 +105,7 @@
                 "x-cumulus-options": {
                 	"netd": true,
                 	"command": "show bgp ipv4 unicast summary",
-                        "parameter_handler": "getBgpv4NeighborsParams"
+                        "parameter_handler": "GetBgpv4NeighborsParams"
                 }
             }
         },
@@ -152,7 +152,7 @@
                 "x-cumulus-options": {
                 	"netd": false,
                 	"command": "show ip route",
-                        "parameter_handler": "getIpv4RoutesParams"
+                        "parameter_handler": "GetIpv4RoutesParams"
                 }
             }
         }

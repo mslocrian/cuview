@@ -93,15 +93,16 @@ func (ch *CumulusHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	*/
 
 	// holding off for now.. some bug
-	output = minifyOutput(validParams, output)
-	delete(validParams, "minify")
-
-	if len(validParams) != 0 {
-		output = handleParams(validParams, output)
+	validParams, output = minifyOutput(validParams, output)
+	ph := &ParameterHandler{}
+	out, err := CallParameterHandlerFunc(ph, ch.routeData.Options.ParamHandler, validParams, output)
+	if err != nil {
+		fmt.Printf("Caught error in handler func: %s\n", err)
 		w.Write(output)
-	} else {
-		w.Write(output)
+		return
 	}
+	output = out[0].Bytes()
+	w.Write(output)
 	return
 }
 

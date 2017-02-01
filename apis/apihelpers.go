@@ -72,15 +72,18 @@ func Minify(s []byte) []byte {
 	return s
 }
 
-func minifyOutput(p map[string][]string, s []byte) []byte {
+func minifyOutput(p map[string][]string, s []byte) (map[string][]string, []byte) {
 	if _, ok := p["minify"]; ok {
 		if strings.ToLower(p["minify"][0]) == "false" {
-			return s
+			delete(p, "minify")
+			return p, s
 		} else {
-			return Minify(s)
+			delete(p, "minify")
+			return p, Minify(s)
 		}
 	}
-	return Minify(s)
+	delete(p, "minify")
+	return p, Minify(s)
 }
 
 func handleParams(p map[string][]string, s []byte) []byte {
