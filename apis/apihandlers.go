@@ -93,9 +93,9 @@ func (ch *CumulusHTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	*/
 
 	// holding off for now.. some bug
-	//output = minifyOutput(validParams, output)
-
+	output = minifyOutput(validParams, output)
 	delete(validParams, "minify")
+
 	if len(validParams) != 0 {
 		output = handleParams(validParams, output)
 		w.Write(output)

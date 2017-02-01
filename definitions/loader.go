@@ -32,8 +32,9 @@ type CumulusCommands struct {
 }
 
 type CumulusOption struct {
-	Netd    bool
-	Command string
+	Netd		 bool
+	Command		 string
+	ParamHandler	string
 }
 
 type Info struct {
@@ -50,7 +51,6 @@ type RequestMethod struct {
 	Summary        string
 	Description    string
 	CumulusOptions *CumulusOption
-	//Parameters     []*Parameter
 	Parameters     map[string]*Parameter
 }
 
@@ -127,7 +127,6 @@ func (s *RequestMethod) AddParameters(opts interface{}) error {
 				continue
 			}
 		}
-		//s.Parameters = append(s.Parameters, p)
 		s.Parameters[p.Name] = p
 	}
 	return err
@@ -142,6 +141,8 @@ func (s *RequestMethod) AddCumulusOpts(opts interface{}) error {
 			copts.Command = v.(string)
 		case "netd":
 			copts.Netd = v.(bool)
+		case "parameter_handler":
+			copts.ParamHandler = v.(string)
 		default:
 			continue
 		}

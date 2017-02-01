@@ -61,10 +61,12 @@ func Minify(s []byte) []byte {
 		output bytes.Buffer
 	)
 	m := minify.New()
+	writer := bufio.NewWriter(&output)
 	m.AddFuncRegexp(regexp.MustCompile("[/+]json$"), minify_json.Minify)
-	if err = m.Minify("application/json", bufio.NewWriter(&output), bytes.NewReader(s)); err != nil {
+	if err = m.Minify("application/json", writer, bytes.NewReader(s)); err != nil {
 		return s
 	} else {
+		writer.Flush()
 		return output.Bytes()
 	}
 	return s
