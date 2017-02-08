@@ -16,11 +16,14 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"net/http"
 	_ "net/http/pprof"
 	"strconv"
+	"time"
 
 	"github.com/mslocrian/cuview/apis"
+	"github.com/mslocrian/cuview/definitions"
 
 	"github.com/prometheus/common/log"
 	"github.com/prometheus/common/version"
@@ -29,19 +32,32 @@ import (
 var (
 	listenAddress = flag.String("listen.address", "127.0.0.1", "IP Address to bind webserver to.")
 	listenPort    = flag.Int("listen.port", 9000, "Port to bind webserver to.")
+	baseDirectory = flag.String("base.dir", "/usr/local/cuview", "Path to installation base")
 )
+
+func LogWebRequest(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var ts string
+		t := time.Now()
+		ts = fmt.Sprintf("%s", t.Format("Mon Jan _2 15:04:05 2006"))
+		log.Infof("%s [%s] %s %s (%s)", r.RemoteAddr, ts, r.Method, r.URL, r.Proto)
+		handler.ServeHTTP(w, r)
+	})
+}
 
 func main() {
 	flag.Parse()
 	log.Infoln("Starting cuview", version.Info())
 	log.Infoln("Build Context", version.BuildContext())
+	apis.BaseDirectory = baseDirectory
+	definitions.BaseDirectory = baseDirectory
 
 	mgr := apis.InitializeApiMgr()
-	mgr.InitializeRestRoutes()
+	mgr.InitializeRestRoutes(definitions.LoadAPIDefs())
 	mgr.InstantiateRestRtr()
 	restRtr := mgr.GetRestRtr()
 
 	bindTuple := *listenAddress + ":" + strconv.Itoa(*listenPort)
 	log.Infof("Listening on %s", bindTuple)
-	log.Fatal(http.ListenAndServe(bindTuple, restRtr))
+	log.Fatal(http.ListenAndServe(bindTuple, LogWebRequest(restRtr)))
 }

@@ -27,6 +27,12 @@
 			"revisionTime": "2017-01-17T07:01:07Z"
 		},
 		{
+			"checksumSHA1": "S3HmUABcDpgOKecvXAvO11jvbDQ=",
+			"path": "github.com/jeffail/gabs",
+			"revision": "235106e63529b2743d680b351fa2677fd496ce1e",
+			"revisionTime": "2017-01-16T15:24:31Z"
+		},
+		{
 			"checksumSHA1": "bKMZjd2wPw13VwoE7mBeSv5djFA=",
 			"path": "github.com/matttproud/golang_protobuf_extensions/pbutil",
 			"revision": "c12348ce28de40eed0136aa2b644d0ee0650e56c",

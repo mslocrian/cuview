@@ -15,55 +15,67 @@
 package apis
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"io"
 	"net"
-	"net/http"
 	"os/exec"
 	"regexp"
 	"strings"
 	"sync"
 
+	//"github.com/jeffail/gabs"
 	"github.com/tdewolff/minify"
 	minify_json "github.com/tdewolff/minify/json"
 )
 
-func doMinifyOutput(r *http.Request) bool {
-	minifyParam := r.URL.Query().Get("minify")
-	if minifyParam == "" {
-		return true
-	} else if strings.ToLower(minifyParam) == "true" {
-		return true
-	} else {
-		return false
-	}
-}
-
-func minifyOutput(w http.ResponseWriter, s []byte) {
+func Minify(s []byte) []byte {
 	var (
-		err error
+		err    error
+		output bytes.Buffer
 	)
 	m := minify.New()
+	writer := bufio.NewWriter(&output)
 	m.AddFuncRegexp(regexp.MustCompile("[/+]json$"), minify_json.Minify)
-	if err = m.Minify("application/json", w, bytes.NewReader(s)); err != nil {
-		w.Write([]byte(s))
+	if err = m.Minify("application/json", writer, bytes.NewReader(s)); err != nil {
+		return s
+	} else {
+		writer.Flush()
+		return output.Bytes()
 	}
-	return
+	return s
 }
 
-func runCumulusNetdCommand(cmd []string) ([]byte, error) {
+func minifyOutput(p map[string][]string, s []byte) (map[string][]string, []byte) {
+	if _, ok := p["minify"]; ok {
+		if strings.ToLower(p["minify"][0]) == "false" {
+			delete(p, "minify")
+			return p, s
+		} else {
+			delete(p, "minify")
+			return p, Minify(s)
+		}
+	}
+	delete(p, "minify")
+	return p, Minify(s)
+}
+
+func runNetdCommand(netCmdSock string, netCmd string, c string) ([]byte, error) {
 	var (
 		err    error
 		cmdOut bytes.Buffer
 	)
+	cmd := strings.Split(c, " ")
+	cmd = append([]string{netCmd}, cmd...)
 	cmd = append(cmd, "json")
+
 	command, err := json.Marshal(cmd)
 	if err != nil {
 		return cmdOut.Bytes(), err
 	}
 
-	conn, err := net.Dial("unix", netdSocket)
+	conn, err := net.Dial("unix", netCmdSock)
 	if err != nil {
 		return cmdOut.Bytes(), err
 	}
@@ -75,17 +87,19 @@ func runCumulusNetdCommand(cmd []string) ([]byte, error) {
 	}
 
 	io.Copy(&cmdOut, conn)
+
 	return cmdOut.Bytes(), err
 }
 
-func runCumulusVtyshCommand(cmd string, args string) ([]byte, error) {
+func runVtyshCommand(cCmd string, cmd string) ([]byte, error) {
 	var (
 		err       error
 		cmdOut    bytes.Buffer
 		runCmd    *exec.Cmd
 		waitGroup sync.WaitGroup
 	)
-	runCmd = exec.Command(cmd, args)
+	cmd = "-c " + cmd + " json"
+	runCmd = exec.Command(cCmd, cmd)
 	stdout, _ := runCmd.StdoutPipe()
 
 	waitGroup.Add(1)
@@ -93,9 +107,7 @@ func runCumulusVtyshCommand(cmd string, args string) ([]byte, error) {
 		defer waitGroup.Done()
 		io.Copy(&cmdOut, stdout)
 	}()
-
 	err = runCmd.Run()
-
 	waitGroup.Wait()
 
 	return cmdOut.Bytes(), err
